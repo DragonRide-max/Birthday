@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Happy Birthday!</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #ffd1dc;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .birthday-title {
+            color: #ff1493;
+            font-size: 3em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: bounce 1s infinite;
+        }
+        .photo-container {
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+        }
+        .photo {
+            width: 400px;
+            height: 400px;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        .photo:hover {
+            transform: scale(1.05);
+        }
+        .wishes {
+            font-size: 1.5em;
+            color: #333;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .cake {
+            font-size: 50px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="birthday-title">Happy Birthday [Name]! 🎉</h1>
+        
+        <div class="cake">🎂</div>
+        
+        <div id="birthdayWishes" class="wishes">
+            <!-- Birthday wishes will be displayed here -->
+        </div>
+
+        <div class="photo-container">
+            <img class="photo" id="randomPhoto" alt="Birthday Memory">
+        </div>
+
+        <div class="wishes">
+            <p>Wishing you:</p>
+            <p>🌟 A heart full of joy</p>
+            <p>🎁 Countless beautiful moments</p>
+            <p>✨ Success in all your endeavors</p>
+            <p>💖 Love and happiness always</p>
+        </div>
+    </div>
+
+    <!-- Google API Script -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
+
+    <script>
+        // Google Drive API configuration
+        const CLIENT_ID = 'YOUR_CLIENT_ID';
+        const API_KEY = 'AIzaSyBFn-uVnERGiPKRvC5IdNpdLtljHUx430s';
+        const FOLDER_ID = 'YOUR_FOLDER_ID';
+        const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
+        const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
+
+        let imageFiles = [];
+        
+        // Array of 100 birthday quotes related to brother-in-law, family, and God
+        const birthdayQuotes = [
+            "To my wonderful brother-in-law, may God's blessings shine upon you today and always!",
+            "You're not just my sister's husband, you're truly a brother to me. Happy Birthday!",
+            "May the Lord guide your path and fill your year with countless blessings.",
+            "Our family is blessed to have you. Happy Birthday, dear brother-in-law!",
+            // Add 96 more quotes here...
+        ];
+
+        function initClient() {
+            gapi.client.init({
+                apiKey: API_KEY,
+                clientId: CLIENT_ID,
+                discoveryDocs: DISCOVERY_DOCS,
+                scope: SCOPES
+            }).then(function () {
+                // Listen for sign-in state changes
+                gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+                // Handle the initial sign-in state
+                updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+            });
+        }
+
+        function updateSigninStatus(isSignedIn) {
+            if (isSignedIn) {
+                loadDriveImages();
+            }
+        }
+
+        function loadDriveImages() {
+            return gapi.client.drive.files.list({
+                'q': `'${FOLDER_ID}' in parents and mimeType contains 'image/'`,
+                'fields': 'files(id, name, webContentLink)',
+                'pageSize': 50
+            }).then(function(response) {
+                imageFiles = response.result.files;
+                if (imageFiles && imageFiles.length > 0) {
+                    updateRandomImage();
+                }
+            });
+        }
+
+        function getRandomQuote() {
+            return birthdayQuotes[Math.floor(Math.random() * birthdayQuotes.length)];
+        }
+
+        function updateRandomImage() {
+            if (imageFiles.length > 0) {
+                const randomImage = imageFiles[Math.floor(Math.random() * imageFiles.length)];
+                const imageUrl = `https://drive.google.com/uc?export=view&id=${randomImage.id}`;
+                document.getElementById('randomPhoto').src = imageUrl;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const wishesDiv = document.getElementById('birthdayWishes');
+
+            // Load the Google API client
+            gapi.load('client:auth2', initClient);
+
+            // Display random birthday quote
+            wishesDiv.innerHTML = `<p>${getRandomQuote()}</p>`;
+
+            // Change quote every 3 seconds
+            setInterval(() => {
+                wishesDiv.innerHTML = `<p>${getRandomQuote()}</p>`;
+            }, 3000);
+
+            // Change image every second
+            setInterval(updateRandomImage, 1000);
+
+            // Add confetti effect
+            function createConfetti() {
+                const colors = ['#ff1493', '#ff69b4', '#ffb6c1', '#ffd700'];
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-20px';
+                confetti.style.width = '10px';
+                confetti.style.height = '10px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.borderRadius = '50%';
+                document.body.appendChild(confetti);
+
+                const animation = confetti.animate(
+                    [
+                        { transform: 'translateY(0) rotate(0)', opacity: 1 },
+                        { transform: 'translateY(100vh) rotate(720deg)', opacity: 0 }
+                    ],
+                    {
+                        duration: 3000,
+                        easing: 'cubic-bezier(.37,0,.63,1)'
+                    }
+                );
+
+                animation.onfinish = () => confetti.remove();
+            }
+
+            // Create confetti every 300ms
+            setInterval(createConfetti, 300);
+        });
+    </script>
+</body>
+</html>
